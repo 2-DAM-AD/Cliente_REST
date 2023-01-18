@@ -21,7 +21,7 @@ public class Main {
         HttpClient httpCliente = HttpClient.newHttpClient();
 
         Scanner scanner = new Scanner(System.in);
-        String respuesta = null;
+        HttpResponse<String> respuesta = null;
         boolean isTablaCorrecta;
         boolean isAccionCorrecta;
 
@@ -65,32 +65,28 @@ public class Main {
             switch (idOperacionSeleccionada) {
                 case 1:
                     isAccionCorrecta = true;
-                    
                     Helper helper = HttpGet.ejecutarGet(httpCliente, tablaSeleccionada);
-
-                    respuesta = convertirBodyToObject(helper.getHttpResponse());
+                    respuesta = helper.getHttpResponse();
 
                     break;
 
                 case 2:
                     isAccionCorrecta = true;
-                    respuesta = convertirBodyToObject(HttpPost.ejecutarPost(httpCliente, tablaSeleccionada));
+                    respuesta = HttpPost.ejecutarPost(httpCliente, tablaSeleccionada);
 
                     break;
 
-                // TODO: Código 204 (al actualizar no devuelve cuerpo, sólo el código 204)
+                // ! Código 204 (al actualizar no devuelve cuerpo, sólo el código 204)
                 case 3:
                     isAccionCorrecta = true;
-
-                    HttpResponse<String> response = HttpPut.ejecutarPut(httpCliente, tablaSeleccionada);
-
-                    System.out.println(response.body());
-                    System.out.println(response.statusCode());
+                    respuesta = HttpPut.ejecutarPut(httpCliente, tablaSeleccionada);
 
                     break;
 
+                // ! Código 500 (no se puede eliminar un registro con claves ajenas 'activas'
                 case 4:
                     isAccionCorrecta = true;
+                    respuesta = HttpDelete.ejecutarDelete(httpCliente, tablaSeleccionada);
                     break;
 
                 default:

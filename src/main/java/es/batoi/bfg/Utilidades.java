@@ -42,16 +42,10 @@ public class Utilidades {
 
             Matcher matcher = Pattern.compile("\\d{4}").matcher(String.valueOf(valor));
 
-            if (valor > 0) {
+            if (valor > 0 && matcher.matches()) {
                 break;
             } else {
-                System.err.print("\n¡Error! Debes introducir un número mayor que 0. Vuelve a intentarlo: ");
-            }
-
-            if (!matcher.matches()) {
-                break;
-            } else {
-                System.out.print("\n¡Error! Debes introducir un número de 4 dígitos. Vuelve a intentarlo: ");
+                System.err.print("\n¡Error! Debes introducir un número mayor que 0 y de 4 dígitos. Vuelve a intentarlo: ");
             }
 
         } while (true);

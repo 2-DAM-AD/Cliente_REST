@@ -60,7 +60,7 @@ public class HttpPut {
                 break;
 
             default:
-                System.err.println("\n¡Error no contemplado (HttpPost)!");
+                System.err.println("\n¡Error no contemplado (HttpPut)!");
         }
 
         HttpRequest request = HttpRequest.newBuilder()
