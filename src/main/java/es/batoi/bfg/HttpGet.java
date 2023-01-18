@@ -1,5 +1,7 @@
 package es.batoi.bfg;
 
+import es.batoi.bfg.modelos.Helper;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -8,10 +10,24 @@ import java.net.http.HttpResponse;
 import java.util.Scanner;
 
 public class HttpGet {
-    public static HttpResponse<String> ejecutarGet(HttpClient cliente, String nombreTabla) throws IOException, InterruptedException {
+    private static boolean isList = false;
+
+    public static Helper ejecutarGet(HttpClient cliente, String nombreTabla) throws IOException, InterruptedException {
         Scanner scanner = new Scanner(System.in);
-        boolean isOpcionObtenerValida = false;
+
+        String url = obtenerUrlCorrectaGet(nombreTabla, scanner);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create(url))
+                .build();
+
+        return new Helper(cliente.send(request, HttpResponse.BodyHandlers.ofString()), isList);
+    }
+
+    private static String obtenerUrlCorrectaGet(String nombreTabla, Scanner scanner) {
         String nombreDatoSingular = "";
+        boolean isOpcionObtenerValida;
         int idDato;
         String url;
 
@@ -42,9 +58,12 @@ public class HttpGet {
             switch (opcionObtenerDatos) {
                 case 1:
                     isOpcionObtenerValida = true;
+                    isList = true;
                     break;
+
                 case 2:
                     isOpcionObtenerValida = true;
+                    isList = false;
 
                     System.out.print("\nIntroduce el ID " + nombreDatoSingular + ": ");
                     idDato = Utilidades.pedirNumeroSeleccionUsuario(scanner);
@@ -52,6 +71,7 @@ public class HttpGet {
                     url += "/" + idDato;
 
                     break;
+
                 default:
                     isOpcionObtenerValida = false;
                     System.err.println("¡Error! No has introducido una opción válida. Vuelve a intentarlo\n");
@@ -59,14 +79,6 @@ public class HttpGet {
 
         } while(!isOpcionObtenerValida);
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .GET()
-                .header("accept", "application/json")
-                .uri(URI.create(url))
-                .build();
-
-        HttpResponse<String> response = cliente.send(request, HttpResponse.BodyHandlers.ofString());
-
-        return response;
+        return url;
     }
 }

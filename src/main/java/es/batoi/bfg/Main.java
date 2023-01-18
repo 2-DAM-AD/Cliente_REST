@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import es.batoi.bfg.modelos.Helper;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -13,14 +14,16 @@ import java.util.Scanner;
 public class Main {
     public static final String URL_ARTISTAS = "http://127.0.0.1:1818/bfg/artistas";
     public static final String URL_CANCIONES = "http://127.0.0.1:1818/bfg/canciones";
+    public static final String TABLA_ARTISTAS = "artistas";
+    public static final String TABLA_CANCIONES = "canciones";
 
     public static void main(String[] args) throws IOException, InterruptedException {
         HttpClient httpCliente = HttpClient.newHttpClient();
 
         Scanner scanner = new Scanner(System.in);
-        HttpResponse<String> respuesta = null;
+        String respuesta = null;
         boolean isTablaCorrecta;
-        boolean isAccionCorrecta = false;
+        boolean isAccionCorrecta;
 
         String tablaSeleccionada = "";
 
@@ -32,12 +35,12 @@ public class Main {
 
             switch (idTablaSeleccionada) {
                 case 1:
-                    tablaSeleccionada = "artistas";
+                    tablaSeleccionada = TABLA_ARTISTAS;
                     isTablaCorrecta = true;
                     break;
 
                 case 2:
-                    tablaSeleccionada = "canciones";
+                    tablaSeleccionada = TABLA_CANCIONES;
                     isTablaCorrecta = true;
                     break;
 
@@ -54,7 +57,7 @@ public class Main {
         } while (!isTablaCorrecta);
 
         do {
-            System.out.println("\nOperaciones disponibles:\n1. Obtener datos (GET)\n2. Insertar datos ()\n3. Actualizar datos ()\n4. Eliminar datos (DELETE)");
+            System.out.println("\nOperaciones disponibles:\n1. Obtener datos (GET)\n2. Insertar datos (POST)\n3. Actualizar datos (PUT)\n4. Eliminar datos (DELETE)");
             System.out.print("\nSelecciona una operación: ");
 
             int idOperacionSeleccionada = Utilidades.pedirNumeroSeleccionUsuario(scanner);
@@ -62,13 +65,17 @@ public class Main {
             switch (idOperacionSeleccionada) {
                 case 1:
                     isAccionCorrecta = true;
+                    
+                    Helper helper = HttpGet.ejecutarGet(httpCliente, tablaSeleccionada);
 
-                    respuesta = HttpGet.ejecutarGet(httpCliente, tablaSeleccionada);
+                    respuesta = convertirBodyToObject(helper.getHttpResponse(), tablaSeleccionada);
 
                     break;
 
                 case 2:
                     isAccionCorrecta = true;
+                    respuesta = convertirBodyToObject(HttpPost.ejecutarPost(httpCliente, tablaSeleccionada), tablaSeleccionada);
+
                     break;
 
                 case 3:
@@ -80,6 +87,7 @@ public class Main {
                     break;
 
                 default:
+                    isAccionCorrecta = false;
                     respuesta = null;
 
                     System.err.println("\n¡Error! No has introducido una operación válida. Vuelve a intentarlo");
@@ -92,11 +100,10 @@ public class Main {
             }
         } while (!isAccionCorrecta || respuesta == null);
 
-        convertirBodyToJson(respuesta);
-
+        System.out.println(respuesta);
     }
 
-    private static void convertirBodyToJson(HttpResponse<String> respuesta) {
+    private static String convertirBodyToObject(HttpResponse<String> respuesta, String tablaSeleccionada) {
         String json = respuesta.body();
 
         JsonParser parser  = new JsonParser();
@@ -105,6 +112,19 @@ public class Main {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         json = gson.toJson(element);
 
-        System.out.println("\n" + json);
+        /*try {
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            switch (tablaSeleccionada) {
+                case TABLA_ARTISTAS:
+                    return objectMapper.readValue(json, Artista.class);
+                case TABLA_CANCIONES:
+                    return objectMapper.readValue(json, Cancion.class);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }*/
+
+        return json;
     }
 }
