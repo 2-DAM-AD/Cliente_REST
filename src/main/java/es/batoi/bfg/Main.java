@@ -68,18 +68,25 @@ public class Main {
                     
                     Helper helper = HttpGet.ejecutarGet(httpCliente, tablaSeleccionada);
 
-                    respuesta = convertirBodyToObject(helper.getHttpResponse(), tablaSeleccionada);
+                    respuesta = convertirBodyToObject(helper.getHttpResponse());
 
                     break;
 
                 case 2:
                     isAccionCorrecta = true;
-                    respuesta = convertirBodyToObject(HttpPost.ejecutarPost(httpCliente, tablaSeleccionada), tablaSeleccionada);
+                    respuesta = convertirBodyToObject(HttpPost.ejecutarPost(httpCliente, tablaSeleccionada));
 
                     break;
 
+                // TODO: Código 204 (al actualizar no devuelve cuerpo, sólo el código 204)
                 case 3:
                     isAccionCorrecta = true;
+
+                    HttpResponse<String> response = HttpPut.ejecutarPut(httpCliente, tablaSeleccionada);
+
+                    System.out.println(response.body());
+                    System.out.println(response.statusCode());
+
                     break;
 
                 case 4:
@@ -103,7 +110,7 @@ public class Main {
         System.out.println(respuesta);
     }
 
-    private static String convertirBodyToObject(HttpResponse<String> respuesta, String tablaSeleccionada) {
+    private static String convertirBodyToObject(HttpResponse<String> respuesta) {
         String json = respuesta.body();
 
         JsonParser parser  = new JsonParser();
