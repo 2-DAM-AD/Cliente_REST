@@ -1,4 +1,4 @@
-package es.batoi.bfg;
+package es.batoi.bfg.utiles;
 
 import java.util.Scanner;
 import java.util.regex.Matcher;

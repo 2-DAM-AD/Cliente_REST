@@ -9,7 +9,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import es.batoi.bfg.modelos.Artista;
 import es.batoi.bfg.modelos.Cancion;
-import es.batoi.bfg.modelos.Helper;
+import es.batoi.bfg.utiles.Helper;
+import es.batoi.bfg.utiles.Utilidades;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -22,6 +23,10 @@ public class Main {
     public static final String URL_CANCIONES = "http://127.0.0.1:1818/bfg/canciones";
     public static final String TABLA_ARTISTAS = "artistas";
     public static final String TABLA_CANCIONES = "canciones";
+    public static final String METODO_GET = "GET";
+    public static final String METODO_POST = "POST";
+    public static final String METODO_PUT = "PUT";
+    public static final String METODO_DELETE = "DELETE";
 
     public static void main(String[] args) throws IOException, InterruptedException {
         HttpClient httpCliente = HttpClient.newHttpClient();
@@ -33,6 +38,8 @@ public class Main {
         boolean isList;
 
         String tablaSeleccionada = "";
+        String metodoEjecutado = "";
+        int codigoRespuesta = 0;
 
         do {
             isList = false;
@@ -72,8 +79,11 @@ public class Main {
             int idOperacionSeleccionada = Utilidades.pedirNumeroSeleccionUsuario(scanner);
 
             switch (idOperacionSeleccionada) {
+                // ! Código 404 (al intentar obtener un registro inexistente (not found))
+                // * Código 200 (se ha encontrado el registro (ok))
                 case 1:
                     isAccionCorrecta = true;
+                    metodoEjecutado = METODO_GET;
                     Helper helper = HttpGet.ejecutarGet(httpCliente, tablaSeleccionada);
                     isList = helper.isList();
                     respuesta = helper.getHttpResponse();
@@ -81,22 +91,29 @@ public class Main {
                     break;
 
                 // ! Código 500 (no se puede añadir una canción con un artista inexistente)
+                // * Código 201 (se ha insertado correctamente (created))
                 case 2:
                     isAccionCorrecta = true;
+                    metodoEjecutado = METODO_POST;
                     respuesta = HttpPost.ejecutarPost(httpCliente, tablaSeleccionada);
 
                     break;
 
-                // ! Código 204 (al actualizar no devuelve cuerpo, sólo el código 204)
+                // ! Código 412 (la url es distinta al id insertado (poco probable))
+                // * Código 204 (al actualizar no devuelve cuerpo, solo el código 204 (si el id no existe igualmente se insertará))
                 case 3:
                     isAccionCorrecta = true;
+                    metodoEjecutado = METODO_PUT;
                     respuesta = HttpPut.ejecutarPut(httpCliente, tablaSeleccionada);
 
                     break;
 
+                // ! Código 412 (la url es distinta al id insertado (poco probable))
                 // ! Código 500 (no se puede eliminar un registro con claves ajenas 'activas')
+                // * Código 204 (al eliminar no devuelve cuerpo, solo el código 204 (si no existe no falla))
                 case 4:
                     isAccionCorrecta = true;
+                    metodoEjecutado = METODO_DELETE;
                     respuesta = HttpDelete.ejecutarDelete(httpCliente, tablaSeleccionada);
                     break;
 
@@ -113,6 +130,27 @@ public class Main {
                     }
             }
         } while (!isAccionCorrecta || respuesta == null);
+
+        /**
+         * * 200 -> 1 | 201 -> 1 | 204 -> 2 (distintos mensajes)
+         * ? 404 -> 1 | 412 -> 2 (mismo mensaje)
+         * ! 500 -> 2 (distintos mensajes)
+         * ! ConnectException (si está desconectado)
+         */
+        switch (metodoEjecutado) {
+            // ? 200 | 404
+            case METODO_GET:
+                break;
+            // ? 201 | 500
+            case METODO_POST:
+                break;
+            // ? 204 | 412
+            case METODO_PUT:
+                break;
+            // ? 204 | 412 | 500
+            case METODO_DELETE:
+                break;
+        }
 
         convertirBodyToObject(respuesta, tablaSeleccionada, isList);
     }

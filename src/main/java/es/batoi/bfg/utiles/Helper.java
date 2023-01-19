@@ -1,4 +1,4 @@
-package es.batoi.bfg.modelos;
+package es.batoi.bfg.utiles;
 
 import java.net.http.HttpResponse;
 

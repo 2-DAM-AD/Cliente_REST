@@ -1,6 +1,7 @@
 package es.batoi.bfg;
 
-import es.batoi.bfg.modelos.Helper;
+import es.batoi.bfg.utiles.Helper;
+import es.batoi.bfg.utiles.Utilidades;
 
 import java.io.IOException;
 import java.net.URI;
