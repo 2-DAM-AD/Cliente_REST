@@ -1,14 +1,20 @@
 package es.batoi.bfg;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import es.batoi.bfg.modelos.Artista;
+import es.batoi.bfg.modelos.Cancion;
 import es.batoi.bfg.modelos.Helper;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -24,10 +30,13 @@ public class Main {
         HttpResponse<String> respuesta = null;
         boolean isTablaCorrecta;
         boolean isAccionCorrecta;
+        boolean isList;
 
         String tablaSeleccionada = "";
 
         do {
+            isList = false;
+
             System.out.println("Tablas disponibles:\n1. Artistas\n2. Canciones\n");
             System.out.print("Selecciona una tabla: ");
 
@@ -66,6 +75,7 @@ public class Main {
                 case 1:
                     isAccionCorrecta = true;
                     Helper helper = HttpGet.ejecutarGet(httpCliente, tablaSeleccionada);
+                    isList = helper.isList();
                     respuesta = helper.getHttpResponse();
 
                     break;
@@ -103,10 +113,10 @@ public class Main {
             }
         } while (!isAccionCorrecta || respuesta == null);
 
-        System.out.println(convertirBodyToObject(respuesta));
+        convertirBodyToObject(respuesta, tablaSeleccionada, isList);
     }
 
-    private static String convertirBodyToObject(HttpResponse<String> respuesta) {
+    private static void convertirBodyToObject(HttpResponse<String> respuesta, String tablaSeleccionada, boolean isList) {
         String json = respuesta.body();
 
         JsonParser parser  = new JsonParser();
@@ -114,6 +124,42 @@ public class Main {
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         json = gson.toJson(element);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            if (isList) {
+                switch (tablaSeleccionada) {
+                    case TABLA_ARTISTAS:
+                        List<Artista> participantJsonList = objectMapper.readValue(json, new TypeReference<List<Artista>>() {
+                        });
+                        for (Artista artista : participantJsonList) {
+                            System.out.println(artista);
+                        }
+
+                        break;
+                    case TABLA_CANCIONES:
+                        List<Cancion> participantJsonList1 = objectMapper.readValue(json, new TypeReference<List<Cancion>>() {
+                        });
+                        for (Cancion artista : participantJsonList1) {
+                            System.out.println(artista);
+                        }
+
+                        break;
+                }
+            } else {
+                switch (tablaSeleccionada) {
+                    case TABLA_ARTISTAS:
+                        System.out.println(objectMapper.readValue(json, Artista.class));
+                        break;
+
+                    case TABLA_CANCIONES:
+                        System.out.println(objectMapper.readValue(json, Cancion.class));
+                        break;
+                }
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         /*try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -128,6 +174,5 @@ public class Main {
             e.printStackTrace();
         }*/
 
-        return json;
     }
 }
