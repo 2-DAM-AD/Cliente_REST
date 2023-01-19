@@ -21,7 +21,7 @@ public class HttpPost {
 
                 System.out.print("\nIntroduce el nombre del artista: ");
                 nombre = scanner.nextLine();
-                System.out.print("\nIntroduce el año en el que se 'creó': ");
+                System.out.print("Introduce el año en el que se 'creó': ");
                 int anyo_creacion = Utilidades.pedirAnyoCreacionGrupo(scanner);
 
                 json = "{\n" +
@@ -36,9 +36,9 @@ public class HttpPost {
 
                 System.out.print("\nIntroduce el nombre de la canción: ");
                 nombre = scanner.nextLine();
-                System.out.print("\nIntroduce el nombre álbum al cuál pertenece: ");
+                System.out.print("Introduce el nombre álbum al cuál pertenece: ");
                 String nombreAlbum = scanner.nextLine();
-                System.out.print("\nIntroduce el ID del artista al cuál pertenece: ");
+                System.out.print("Introduce el ID del artista al cuál pertenece: ");
                 int idArtistaCancion = Utilidades.pedirNumeroSeleccionUsuario(scanner);
 
                 json = "{\n" +

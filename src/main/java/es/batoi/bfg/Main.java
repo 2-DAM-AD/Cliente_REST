@@ -80,6 +80,7 @@ public class Main {
 
                     break;
 
+                // ! Código 500 (no se puede añadir una canción con un artista inexistente)
                 case 2:
                     isAccionCorrecta = true;
                     respuesta = HttpPost.ejecutarPost(httpCliente, tablaSeleccionada);
@@ -93,7 +94,7 @@ public class Main {
 
                     break;
 
-                // ! Código 500 (no se puede eliminar un registro con claves ajenas 'activas'
+                // ! Código 500 (no se puede eliminar un registro con claves ajenas 'activas')
                 case 4:
                     isAccionCorrecta = true;
                     respuesta = HttpDelete.ejecutarDelete(httpCliente, tablaSeleccionada);
@@ -160,19 +161,5 @@ public class Main {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-
-        /*try {
-            ObjectMapper objectMapper = new ObjectMapper();
-
-            switch (tablaSeleccionada) {
-                case TABLA_ARTISTAS:
-                    return objectMapper.readValue(json, Artista.class);
-                case TABLA_CANCIONES:
-                    return objectMapper.readValue(json, Cancion.class);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-
     }
 }
