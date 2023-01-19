@@ -103,7 +103,7 @@ public class Main {
             }
         } while (!isAccionCorrecta || respuesta == null);
 
-        System.out.println(respuesta);
+        System.out.println(convertirBodyToObject(respuesta));
     }
 
     private static String convertirBodyToObject(HttpResponse<String> respuesta) {
