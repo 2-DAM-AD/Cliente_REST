@@ -1,5 +1,7 @@
 package es.batoi.bfg;
 
+import es.batoi.bfg.modelos.Artista;
+import es.batoi.bfg.modelos.Cancion;
 import es.batoi.bfg.utiles.Utilidades;
 
 import java.io.IOException;
@@ -15,20 +17,15 @@ public class HttpPost {
         String url = "";
         String json = "";
 
-        String nombre;
-
         switch (nombreTabla) {
             case "artistas":
                 url = Main.URL_ARTISTAS;
 
-                System.out.print("\nIntroduce el nombre del artista: ");
-                nombre = scanner.nextLine();
-                System.out.print("Introduce el año en el que se 'creó': ");
-                int anyo_creacion = Utilidades.pedirAnyoCreacionGrupo(scanner);
+                Artista artista = devolverArtista(scanner);
 
                 json = "{\n" +
-                        "  \"nombre\": \"" + nombre + "\",\n" +
-                        "  \"anyo_creacion\": " + anyo_creacion + "\n" +
+                        "  \"nombre\": \"" + artista.getNombre() + "\",\n" +
+                        "  \"anyo_creacion\": " + artista.getAnyo_creacion() + "\n" +
                         "}";
 
                 break;
@@ -36,17 +33,12 @@ public class HttpPost {
             case "canciones":
                 url = Main.URL_CANCIONES;
 
-                System.out.print("\nIntroduce el nombre de la canción: ");
-                nombre = scanner.nextLine();
-                System.out.print("Introduce el nombre álbum al cuál pertenece: ");
-                String nombreAlbum = scanner.nextLine();
-                System.out.print("Introduce el ID del artista al cuál pertenece: ");
-                int idArtistaCancion = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+                Cancion cancion = devolverCancion(scanner);
 
                 json = "{\n" +
-                        "  \"nombre\": \"" + nombre + "\",\n" +
-                        "  \"album\": \"" + nombreAlbum + "\",\n" +
-                        "  \"idArtista\": " + idArtistaCancion + "\n" +
+                        "  \"nombre\": \"" + cancion.getNombre() + "\",\n" +
+                        "  \"album\": \"" + cancion.getAlbum() + "\",\n" +
+                        "  \"idArtista\": " + cancion.getIdArtista() + "\n" +
                         "}";
 
                 break;
@@ -62,5 +54,37 @@ public class HttpPost {
                 .build();
 
         return cliente.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    private static Artista devolverArtista(Scanner scanner) {
+        System.out.print("Introduce el nombre del artista: ");
+        String nombre = scanner.nextLine();
+
+        System.out.print("Introduce el año en el que se 'creó': ");
+        int anyo_creacion = Utilidades.pedirAnyoCreacionGrupo(scanner);
+
+        Artista artista = new Artista();
+        artista.setNombre(nombre);
+        artista.setAnyo_creacion(anyo_creacion);
+
+        return artista;
+    }
+
+    private static Cancion devolverCancion(Scanner scanner) {
+        System.out.print("Introduce el nombre de la canción: ");
+        String nombre = scanner.nextLine();
+
+        System.out.print("Introduce el nombre álbum al cuál pertenece: ");
+        String nombreAlbum = scanner.nextLine();
+
+        System.out.print("Introduce el ID del artista al cuál pertenece: ");
+        int idArtistaCancion = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+
+        Cancion cancion = new Cancion();
+        cancion.setNombre(nombre);
+        cancion.setAlbum(nombreAlbum);
+        cancion.setIdArtista(idArtistaCancion);
+
+        return cancion;
     }
 }

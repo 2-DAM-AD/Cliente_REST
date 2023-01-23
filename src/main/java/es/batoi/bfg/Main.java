@@ -16,6 +16,7 @@ import es.batoi.bfg.utiles.Helper;
 import es.batoi.bfg.utiles.Utilidades;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.util.List;
@@ -74,70 +75,74 @@ public class Main {
             }
         } while (!isTablaCorrecta);
 
-        do {
-            System.out.println("\nOperaciones disponibles:\n1. Obtener datos (GET)\n2. Insertar datos (POST)\n3. Actualizar datos (PUT)\n4. Eliminar datos (DELETE)");
-            System.out.print("\nSelecciona una operación: ");
+        try {
+            do {
+                System.out.println("\nOperaciones disponibles:\n1. Obtener datos (GET)\n2. Insertar datos (POST)\n3. Actualizar datos (PUT)\n4. Eliminar datos (DELETE)");
+                System.out.print("\nSelecciona una operación: ");
 
-            int idOperacionSeleccionada = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+                int idOperacionSeleccionada = Utilidades.pedirNumeroSeleccionUsuario(scanner);
 
-            try {
-                switch (idOperacionSeleccionada) {
-                    // ! Código 404 (al intentar obtener un registro inexistente (not found))
-                    // * Código 200 (se ha encontrado el registro (ok))
-                    case 1:
-                        isAccionCorrecta = true;
-                        metodoEjecutado = METODO_GET;
-                        Helper helper = HttpGet.ejecutarGet(httpCliente, tablaSeleccionada);
-                        isList = helper.isList();
-                        respuesta = helper.getHttpResponse();
 
-                        break;
+                    switch (idOperacionSeleccionada) {
+                        // ! Código 404 (al intentar obtener un registro inexistente (not found))
+                        // * Código 200 (se ha encontrado el registro (ok))
+                        case 1:
+                            isAccionCorrecta = true;
+                            metodoEjecutado = METODO_GET;
+                            Helper helper = HttpGet.ejecutarGet(httpCliente, tablaSeleccionada);
+                            isList = helper.isList();
+                            respuesta = helper.getHttpResponse();
 
-                    // ! Código 500 (no se puede añadir una canción con un artista inexistente)
-                    // * Código 201 (se ha insertado correctamente (created))
-                    case 2:
-                        isAccionCorrecta = true;
-                        metodoEjecutado = METODO_POST;
-                        respuesta = HttpPost.ejecutarPost(httpCliente, tablaSeleccionada);
+                            break;
 
-                        break;
+                        // ! Código 500 (no se puede añadir una canción con un artista inexistente)
+                        // * Código 201 (se ha insertado correctamente (created))
+                        case 2:
+                            isAccionCorrecta = true;
+                            metodoEjecutado = METODO_POST;
+                            respuesta = HttpPost.ejecutarPost(httpCliente, tablaSeleccionada);
 
-                    // ! Código 412 (la url es distinta al id insertado (poco probable))
-                    // * Código 204 (al actualizar no devuelve cuerpo, solo el código 204 (si el id no existe igualmente se insertará))
-                    case 3:
-                        isAccionCorrecta = true;
-                        metodoEjecutado = METODO_PUT;
-                        respuesta = HttpPut.ejecutarPut(httpCliente, tablaSeleccionada);
+                            break;
 
-                        break;
+                        // ! Código 412 (la url es distinta al id insertado (poco probable))
+                        // * Código 204 (al actualizar no devuelve cuerpo, solo el código 204 (si el id no existe igualmente se insertará))
+                        case 3:
+                            isAccionCorrecta = true;
+                            metodoEjecutado = METODO_PUT;
+                            respuesta = HttpPut.ejecutarPut(httpCliente, tablaSeleccionada);
 
-                    // ! Código 412 (la url es distinta al id insertado (poco probable))
-                    // ! Código 500 (no se puede eliminar un registro con claves ajenas 'activas')
-                    // * Código 204 (al eliminar no devuelve cuerpo, solo el código 204 (si no existe no falla))
-                    case 4:
-                        isAccionCorrecta = true;
-                        metodoEjecutado = METODO_DELETE;
-                        respuesta = HttpDelete.ejecutarDelete(httpCliente, tablaSeleccionada);
-                        break;
+                            break;
 
-                    default:
-                        isAccionCorrecta = false;
-                        respuesta = null;
+                        // ! Código 412 (la url es distinta al id insertado (poco probable))
+                        // ! Código 500 (no se puede eliminar un registro con claves ajenas 'activas')
+                        // * Código 204 (al eliminar no devuelve cuerpo, solo el código 204 (si no existe no falla))
+                        case 4:
+                            isAccionCorrecta = true;
+                            metodoEjecutado = METODO_DELETE;
+                            respuesta = HttpDelete.ejecutarDelete(httpCliente, tablaSeleccionada);
+                            break;
 
-                        System.err.println("\n¡Error! No has introducido una operación válida. Vuelve a intentarlo");
+                        default:
+                            isAccionCorrecta = false;
+                            respuesta = null;
 
-                        try {
-                            Thread.sleep(50);
-                        } catch (InterruptedException e) {
-                            System.err.println("¡Error! Espera en selección de tabla fallida");
-                        }
-                }
-            } catch (IOException e) {
-                System.err.println(e.getMessage());
-            } catch (InterruptedException e) {
-                System.err.println(e.getMessage());
-            } ;
-        } while (!isAccionCorrecta || respuesta == null);
+                            System.err.println("\n¡Error! No has introducido una operación válida. Vuelve a intentarlo");
+
+                            try {
+                                Thread.sleep(50);
+                            } catch (InterruptedException e) {
+                                System.err.println("¡Error! Espera en selección de tabla fallida");
+                            }
+                    }
+
+            } while (!isAccionCorrecta || respuesta == null);
+        } catch (ConnectException e) {
+            System.err.println("\n¡Error! El cliente no se ha podido conectar. Por favor, contacta con el 'soporte técnico'");
+            return;
+        } catch (IOException | InterruptedException e) {
+            System.err.println("\n" + e.getMessage());
+            return;
+        }
 
         int codigoRespuesta = respuesta.statusCode();
         String cuerpoRespuesta = respuesta.body();
@@ -194,9 +199,9 @@ public class Main {
             convertirBodyToObject(cuerpoRespuesta, tablaSeleccionada, isList);
 
         } catch (ExceptionError404 | ExceptionError412 | ExceptionError500 e) {
-            e.printStackTrace();
+            System.err.println("\n" + e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("\n" + e.getMessage());
         }
     }
 

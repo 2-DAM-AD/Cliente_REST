@@ -1,5 +1,7 @@
 package es.batoi.bfg;
 
+import es.batoi.bfg.modelos.Artista;
+import es.batoi.bfg.modelos.Cancion;
 import es.batoi.bfg.utiles.Utilidades;
 
 import java.io.IOException;
@@ -14,26 +16,20 @@ public class HttpPut {
         Scanner scanner = new Scanner(System.in);
         String url = "";
         String json = "";
-        int id = 0;
 
-        String nombre;
+        int id = 0;
 
         switch (nombreTabla) {
             case "artistas":
                 url = Main.URL_ARTISTAS;
 
-                System.out.print("\nIntroduce el ID del artista que deseas actualizar: ");
-                id = Utilidades.pedirNumeroSeleccionUsuario(scanner);
-                scanner.nextLine();
-                System.out.print("Introduce el nombre del artista: ");
-                nombre = scanner.nextLine();
-                System.out.print("Introduce el año en el que se 'creó': ");
-                int anyo_creacion = Utilidades.pedirAnyoCreacionGrupo(scanner);
+                Artista artista = devolverArtistaConId(scanner);
+                id = artista.getId();
 
                 json = "{\n" +
-                        "  \"id\": \"" + id + "\",\n" +
-                        "  \"nombre\": \"" + nombre + "\",\n" +
-                        "  \"anyo_creacion\": " + anyo_creacion + "\n" +
+                        "  \"id\": \"" + artista.getId() + "\",\n" +
+                        "  \"nombre\": \"" + artista.getNombre() + "\",\n" +
+                        "  \"anyo_creacion\": " + artista.getAnyo_creacion() + "\n" +
                         "}";
 
                 break;
@@ -42,21 +38,14 @@ public class HttpPut {
             case "canciones":
                 url = Main.URL_CANCIONES;
 
-                System.out.print("\nIntroduce el ID de la canción que deseas actualizar: ");
-                id = Utilidades.pedirNumeroSeleccionUsuario(scanner);
-                scanner.nextLine();
-                System.out.print("Introduce el nombre de la canción: ");
-                nombre = scanner.nextLine();
-                System.out.print("Introduce el nombre álbum al cuál pertenece: ");
-                String nombreAlbum = scanner.nextLine();
-                System.out.print("Introduce el ID del artista al cuál pertenece: ");
-                int idArtistaCancion = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+                Cancion cancion = devolverCancionConId(scanner);
+                id = cancion.getId();
 
                 json = "{\n" +
-                        "  \"id\": \"" + id + "\",\n" +
-                        "  \"nombre\": \"" + nombre + "\",\n" +
-                        "  \"album\": \"" + nombreAlbum + "\",\n" +
-                        "  \"idArtista\": " + idArtistaCancion + "\n" +
+                        "  \"id\": \"" + cancion.getId() + "\",\n" +
+                        "  \"nombre\": \"" + cancion.getNombre() + "\",\n" +
+                        "  \"album\": \"" + cancion.getAlbum() + "\",\n" +
+                        "  \"idArtista\": " + cancion.getIdArtista() + "\n" +
                         "}";
 
                 break;
@@ -73,5 +62,47 @@ public class HttpPut {
 
 
         return cliente.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    private static Artista devolverArtistaConId(Scanner scanner) {
+        System.out.print("\nIntroduce el ID del artista que deseas actualizar: ");
+        int id = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+        scanner.nextLine();
+
+        System.out.print("Introduce el nombre del artista: ");
+        String nombre = scanner.nextLine();
+
+        System.out.print("Introduce el año en el que se 'creó': ");
+        int anyo_creacion = Utilidades.pedirAnyoCreacionGrupo(scanner);
+
+        Artista artista = new Artista();
+        artista.setId(id);
+        artista.setNombre(nombre);
+        artista.setAnyo_creacion(anyo_creacion);
+
+        return artista;
+    }
+
+    private static Cancion devolverCancionConId(Scanner scanner) {
+        System.out.print("\nIntroduce el ID de la canción que deseas actualizar: ");
+        int id = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+        scanner.nextLine();
+
+        System.out.print("Introduce el nombre de la canción: ");
+        String nombre = scanner.nextLine();
+
+        System.out.print("Introduce el nombre álbum al cuál pertenece: ");
+        String nombreAlbum = scanner.nextLine();
+
+        System.out.print("Introduce el ID del artista al cuál pertenece: ");
+        int idArtistaCancion = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+
+        Cancion cancion = new Cancion();
+        cancion.setId(id);
+        cancion.setNombre(nombre);
+        cancion.setAlbum(nombreAlbum);
+        cancion.setIdArtista(idArtistaCancion);
+
+        return cancion;
     }
 }
