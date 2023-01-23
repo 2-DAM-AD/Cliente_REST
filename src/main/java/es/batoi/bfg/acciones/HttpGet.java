@@ -1,5 +1,6 @@
-package es.batoi.bfg;
+package es.batoi.bfg.acciones;
 
+import es.batoi.bfg.Main;
 import es.batoi.bfg.utiles.Helper;
 import es.batoi.bfg.utiles.Utilidades;
 
