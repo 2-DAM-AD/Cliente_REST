@@ -40,7 +40,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         HttpResponse<String> respuesta = null;
         boolean isTablaCorrecta;
-        boolean isAccionCorrecta = false;
+        boolean isAccionCorrecta;
         boolean isList;
 
         String metodoEjecutado = "";
@@ -48,9 +48,9 @@ public class Main {
         boolean continuar = false;
 
         do {
-            do {
-                isList = false;
+            isList = false;
 
+            do {
                 System.out.println("Tablas disponibles:\n1. Artistas\n2. Canciones\n");
                 System.out.print("Selecciona una tabla: ");
 
