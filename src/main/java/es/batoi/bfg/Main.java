@@ -32,6 +32,8 @@ public class Main {
     public static final String METODO_PUT = "PUT";
     public static final String METODO_DELETE = "DELETE";
 
+    private static String tablaSeleccionada = "";
+
     public static void main(String[] args) {
         HttpClient httpCliente = HttpClient.newHttpClient();
 
@@ -41,47 +43,48 @@ public class Main {
         boolean isAccionCorrecta = false;
         boolean isList;
 
-        String tablaSeleccionada = "";
         String metodoEjecutado = "";
 
+        boolean continuar = false;
+
         do {
-            isList = false;
-
-            System.out.println("Tablas disponibles:\n1. Artistas\n2. Canciones\n");
-            System.out.print("Selecciona una tabla: ");
-
-            int idTablaSeleccionada = Utilidades.pedirNumeroSeleccionUsuario(scanner);
-
-            switch (idTablaSeleccionada) {
-                case 1:
-                    tablaSeleccionada = TABLA_ARTISTAS;
-                    isTablaCorrecta = true;
-                    break;
-
-                case 2:
-                    tablaSeleccionada = TABLA_CANCIONES;
-                    isTablaCorrecta = true;
-                    break;
-
-                default:
-                    isTablaCorrecta = false;
-                    System.err.println("\n¡Error! No has introducido una tabla válida. Vuelve a intentarlo\n");
-
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException e) {
-                        System.err.println("¡Error! Espera en selección de tabla fallida");
-                    }
-            }
-        } while (!isTablaCorrecta);
-
-        try {
             do {
-                System.out.println("\nOperaciones disponibles:\n1. Obtener datos (GET)\n2. Insertar datos (POST)\n3. Actualizar datos (PUT)\n4. Eliminar datos (DELETE)");
-                System.out.print("\nSelecciona una operación: ");
+                isList = false;
 
-                int idOperacionSeleccionada = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+                System.out.println("Tablas disponibles:\n1. Artistas\n2. Canciones\n");
+                System.out.print("Selecciona una tabla: ");
 
+                int idTablaSeleccionada = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+
+                switch (idTablaSeleccionada) {
+                    case 1:
+                        tablaSeleccionada = TABLA_ARTISTAS;
+                        isTablaCorrecta = true;
+                        break;
+
+                    case 2:
+                        tablaSeleccionada = TABLA_CANCIONES;
+                        isTablaCorrecta = true;
+                        break;
+
+                    default:
+                        isTablaCorrecta = false;
+                        System.err.println("\n¡Error! No has introducido una tabla válida. Vuelve a intentarlo\n");
+
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException e) {
+                            System.err.println("¡Error! Espera en selección de tabla fallida");
+                        }
+                }
+            } while (!isTablaCorrecta);
+
+            try {
+                do {
+                    System.out.println("\nOperaciones disponibles:\n1. Obtener datos (GET)\n2. Insertar datos (POST)\n3. Actualizar datos (PUT)\n4. Eliminar datos (DELETE)\n5. Salir");
+                    System.out.print("\nSelecciona una operación: ");
+
+                    int idOperacionSeleccionada = Utilidades.pedirNumeroSeleccionUsuario(scanner);
 
                     switch (idOperacionSeleccionada) {
                         // ! Código 404 (al intentar obtener un registro inexistente (not found))
@@ -122,6 +125,10 @@ public class Main {
                             respuesta = HttpDelete.ejecutarDelete(httpCliente, tablaSeleccionada);
                             break;
 
+                        case 5:
+                            System.out.println("\nAdiós");
+                            return;
+
                         default:
                             isAccionCorrecta = false;
                             respuesta = null;
@@ -135,80 +142,113 @@ public class Main {
                             }
                     }
 
-            } while (!isAccionCorrecta || respuesta == null);
-        } catch (ConnectException e) {
-            System.err.println("\n¡Error! El cliente no se ha podido conectar. Por favor, contacta con el 'soporte técnico'");
-            return;
-        } catch (IOException | InterruptedException e) {
-            System.err.println("\n" + e.getMessage());
-            return;
-        }
+                } while (!isAccionCorrecta || respuesta == null);
+            } catch (ConnectException e) {
+                System.err.println("\n¡Error! El cliente no se ha podido conectar. Por favor, contacta con el 'soporte técnico'");
+                return;
+            } catch (IOException | InterruptedException e) {
+                System.err.println("\n" + e.getMessage());
+                return;
+            }
 
-        int codigoRespuesta = respuesta.statusCode();
-        String cuerpoRespuesta = respuesta.body();
+            int codigoRespuesta = respuesta.statusCode();
+            String cuerpoRespuesta = respuesta.body();
 
-        /**
-         * * 200 -> 1 | 201 -> 1 | 204 -> 2 (distintos mensajes)
-         * ? 404 -> 1 | 412 -> 2 (mismo mensaje)
-         * ! 500 -> 2 (distintos mensajes)
-         * ! ConnectException (si está desconectado)
-         */
-        try {
-            switch (codigoRespuesta) {
-                case 200:
-                    System.out.println("\nCódigo 200: Ok");
+            try {
+                gestionarCodigoRespuesta(metodoEjecutado, codigoRespuesta);
+
+                convertirBodyToObject(cuerpoRespuesta, isList);
+
+            } catch (ExceptionError404 | ExceptionError412 | ExceptionError500 e) {
+                System.err.println("\n" + e.getMessage());
+            } catch (Exception e) {
+                System.err.println("\n" + e.getMessage());
+            }
+
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                System.err.println("¡Error! Espera en selección de continuar fallida");
+            }
+
+            System.out.println("\n¿Quieres continuar?:\n1. Sí\n2. No\n");
+            System.out.print("Selecciona tu opción: ");
+
+            int opcionSalir = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+
+            switch (opcionSalir) {
+                case 1:
+                    continuar = true;
+                    System.out.println();
                     break;
-                case 201:
-                    System.out.println("\nCódigo 201: Objeto insertado correctamente");
-                    break;
-                case 204:
-                    System.out.print("\nCódigo 204:");
 
-                    if (metodoEjecutado.equals(METODO_PUT)) {
-                        System.out.println(" Objeto actualizado correctamente");
-                    }
-
-                    if (metodoEjecutado.equals(METODO_DELETE)) {
-                        System.out.println(" Objeto eliminado correctamente");
-                    }
-
-                    break;
-
-                // Excepciones de error
-                case 404:
-                    throw new ExceptionError404();
-                case 412:
-                    throw new ExceptionError412();
-                case 500:
-                    if (metodoEjecutado.equals(METODO_POST)) {
-                        throw new ExceptionError500("El ID del artista de la canción no existe.");
-                    }
-
-                    if (metodoEjecutado.equals(METODO_DELETE)) {
-                        throw new ExceptionError500("No puedes eliminar un artista que tenga canciones registradas.");
-                    }
-
+                case 2:
+                    continuar = false;
+                    System.out.println("\nAdiós");
                     break;
 
                 default:
-                    System.err.println("¡Error no contemplado!");
-                    throw new Exception("Código " + codigoRespuesta + ": ¡Error no contemplado!");
+                    continuar = false;
+                    System.err.println("\n¡Error! Opción seleccionada incorrecta.\nSaliendo del programa...");
 
             }
+        } while (continuar);
+    }
 
-            convertirBodyToObject(cuerpoRespuesta, tablaSeleccionada, isList);
+    /**
+     * * 200 -> 1 | 201 -> 1 | 204 -> 2 (distintos mensajes)
+     * ? 404 -> 1 | 412 -> 2 (mismo mensaje)
+     * ! 500 -> 2 (distintos mensajes)
+     * ! ConnectException (si está desconectado)
+     */
+    private static void gestionarCodigoRespuesta(String metodoEjecutado, int codigoRespuesta) throws Exception {
+        switch (codigoRespuesta) {
+            case 200:
+                System.out.println("\nCódigo 200: Ok");
+                break;
+            case 201:
+                System.out.println("\nCódigo 201: Objeto insertado correctamente");
+                break;
+            case 204:
+                System.out.print("\nCódigo 204:");
 
-        } catch (ExceptionError404 | ExceptionError412 | ExceptionError500 e) {
-            System.err.println("\n" + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("\n" + e.getMessage());
+                if (metodoEjecutado.equals(METODO_PUT)) {
+                    System.out.println(" Objeto actualizado correctamente");
+                }
+
+                if (metodoEjecutado.equals(METODO_DELETE)) {
+                    System.out.println(" Objeto eliminado correctamente");
+                }
+
+                break;
+
+            // Excepciones de error
+            case 404:
+                throw new ExceptionError404();
+            case 412:
+                throw new ExceptionError412();
+            case 500:
+                if (metodoEjecutado.equals(METODO_POST)) {
+                    throw new ExceptionError500("El ID del artista de la canción no existe.");
+                }
+
+                if (metodoEjecutado.equals(METODO_DELETE)) {
+                    throw new ExceptionError500("No puedes eliminar un artista que tenga canciones registradas.");
+                }
+
+                break;
+
+            default:
+                System.err.println("¡Error no contemplado!");
+                throw new Exception("Código " + codigoRespuesta + ": ¡Error no contemplado!");
+
         }
     }
 
     // TODO: Hacer método que controle los códigos de la respuesta y sus posibles excepciones
 
     // TODO: Recibir body de HttpResponse y convertirlo en el objeto correspondiente
-    private static void convertirBodyToObject(String cuerpoRespuesta, String tablaSeleccionada, boolean isList) {
+    private static void convertirBodyToObject(String cuerpoRespuesta, boolean isList) {
         if (!cuerpoRespuesta.equals("")) {
             String json = cuerpoRespuesta;
 
