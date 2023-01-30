@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import es.batoi.bfg.acciones.HttpDelete;
 import es.batoi.bfg.acciones.HttpGet;
@@ -43,7 +42,6 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
         HttpResponse<String> respuesta = null;
-        boolean isTablaCorrecta;
         boolean isAccionCorrecta;
         boolean isList;
 
@@ -54,35 +52,10 @@ public class Main {
         do {
             isList = false;
 
-            do {
-                System.out.println("Tablas disponibles:\n1. Artistas\n2. Canciones\n");
-                System.out.print("Selecciona una tabla: ");
+            // * Pedir tabla sobre la que actuar
+            obtenerTabla(scanner);
 
-                int idTablaSeleccionada = Utilidades.pedirNumeroSeleccionUsuario(scanner);
-
-                switch (idTablaSeleccionada) {
-                    case 1:
-                        tablaSeleccionada = TABLA_ARTISTAS;
-                        isTablaCorrecta = true;
-                        break;
-
-                    case 2:
-                        tablaSeleccionada = TABLA_CANCIONES;
-                        isTablaCorrecta = true;
-                        break;
-
-                    default:
-                        isTablaCorrecta = false;
-                        System.err.println("\n¡Error! No has introducido una tabla válida. Vuelve a intentarlo\n");
-
-                        try {
-                            Thread.sleep(50);
-                        } catch (InterruptedException e) {
-                            System.err.println("¡Error! Espera en selección de tabla fallida");
-                        }
-                }
-            } while (!isTablaCorrecta);
-
+            // * Pedir y realizar opción a ejecutar
             try {
                 do {
                     System.out.println("\nOperaciones disponibles:\n1. Obtener datos (GET)\n2. Insertar datos (POST)\n3. Actualizar datos (PUT)\n4. Eliminar datos (DELETE)\n5. Salir");
@@ -155,12 +128,15 @@ public class Main {
                 return;
             }
 
+            // * Obtener código y cuerpo de respuesta
             int codigoRespuesta = respuesta.statusCode();
             String cuerpoRespuesta = respuesta.body();
 
             try {
+                // * Gestionar código de respuesta
                 gestionarCodigoRespuesta(metodoEjecutado, codigoRespuesta);
 
+                // * Convertir cuerpo a objeto y mostrarlo
                 convertirBodyToObject(cuerpoRespuesta, isList);
 
             } catch (ExceptionError404 | ExceptionError412 | ExceptionError500 e) {
@@ -175,28 +151,69 @@ public class Main {
                 System.err.println("¡Error! Espera en selección de continuar fallida");
             }
 
-            System.out.println("\n¿Quieres continuar?:\n1. Sí\n2. No\n");
-            System.out.print("Selecciona tu opción: ");
+            // * Pide al usuario si desea continuar
+            continuar = pedirConfirmacionSalir(scanner);
 
-            int opcionSalir = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+        } while (continuar);
+    }
 
-            switch (opcionSalir) {
+
+    private static void obtenerTabla(Scanner scanner) {
+        boolean isTablaCorrecta;
+        do {
+            System.out.println("Tablas disponibles:\n1. Artistas\n2. Canciones\n");
+            System.out.print("Selecciona una tabla: ");
+
+            int idTablaSeleccionada = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+
+            switch (idTablaSeleccionada) {
                 case 1:
-                    continuar = true;
-                    System.out.println();
+                    tablaSeleccionada = TABLA_ARTISTAS;
+                    isTablaCorrecta = true;
                     break;
 
                 case 2:
-                    continuar = false;
-                    System.out.println("\nAdiós");
+                    tablaSeleccionada = TABLA_CANCIONES;
+                    isTablaCorrecta = true;
                     break;
 
                 default:
-                    continuar = false;
-                    System.err.println("\n¡Error! Opción seleccionada incorrecta.\nSaliendo del programa...");
+                    isTablaCorrecta = false;
+                    System.err.println("\n¡Error! No has introducido una tabla válida. Vuelve a intentarlo\n");
 
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        System.err.println("¡Error! Espera en selección de tabla fallida");
+                    }
             }
-        } while (continuar);
+        } while (!isTablaCorrecta);
+    }
+
+    private static boolean pedirConfirmacionSalir(Scanner scanner) {
+        System.out.println("\n¿Quieres continuar?:\n1. Sí\n2. No\n");
+        System.out.print("Selecciona tu opción: ");
+
+        boolean continuar;
+        int opcionSalir = Utilidades.pedirNumeroSeleccionUsuario(scanner);
+
+        switch (opcionSalir) {
+            case 1:
+                continuar = true;
+                System.out.println();
+                break;
+
+            case 2:
+                continuar = false;
+                System.out.println("\nAdiós");
+                break;
+
+            default:
+                continuar = false;
+                System.err.println("\n¡Error! Opción seleccionada incorrecta.\nSaliendo del programa...");
+
+        }
+        return continuar;
     }
 
     /**
@@ -254,35 +271,29 @@ public class Main {
     // TODO: Recibir body de HttpResponse y convertirlo en el objeto correspondiente
     private static void convertirBodyToObject(String cuerpoRespuesta, boolean isList) {
         if (!cuerpoRespuesta.equals("")) {
-            String json = cuerpoRespuesta;
-
-            JsonParser parser = new JsonParser();
-            JsonElement element = parser.parse(json);
-
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            json = gson.toJson(element);
+            Gson gson = new GsonBuilder().create();
+            String json = gson.toJson(JsonParser.parseString(cuerpoRespuesta));
 
             ObjectMapper objectMapper = new ObjectMapper();
             try {
                 if (isList) {
                     switch (tablaSeleccionada) {
                         case TABLA_ARTISTAS:
-                            List<Artista> participantJsonList = objectMapper.readValue(json, new TypeReference<List<Artista>>() {
-                            });
+                            List<Artista> participantJsonList = objectMapper.readValue(json, new TypeReference<List<Artista>>() {});
                             for (Artista artista : participantJsonList) {
                                 System.out.println(artista);
                             }
-
                             break;
+
                         case TABLA_CANCIONES:
-                            List<Cancion> participantJsonList1 = objectMapper.readValue(json, new TypeReference<List<Cancion>>() {
-                            });
+                            List<Cancion> participantJsonList1 = objectMapper.readValue(json, new TypeReference<List<Cancion>>() {});
                             for (Cancion artista : participantJsonList1) {
                                 System.out.println(artista);
                             }
-
                             break;
+
                     }
+
                 } else {
                     switch (tablaSeleccionada) {
                         case TABLA_ARTISTAS:
@@ -294,8 +305,9 @@ public class Main {
                             break;
                     }
                 }
+
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         }
     }

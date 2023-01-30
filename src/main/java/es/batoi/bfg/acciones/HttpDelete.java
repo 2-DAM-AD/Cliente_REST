@@ -49,7 +49,6 @@ public class HttpDelete {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url + "/" + id))
-                .header("accept", "application/json")
                 .header("Content-Type", "application/json")
                 .method("DELETE", HttpRequest.BodyPublishers.ofString(json))
                 .build();
